@@ -23,7 +23,7 @@ from .pr_parser import get_pull_request_for_context
 from .pull_request_body import create_pull_request_title_and_body, firstline
 from .pullrequest import PullRequestId
 from .pullrequeststore import PullRequestStore
-from .run_git_command import run_git_command
+from .run_git_command import run_git_command, run_git_command_popen
 
 
 def submit(ui, repo, *args, **opts) -> int:
@@ -186,7 +186,12 @@ async def update_commits_in_stack(
         gitdir = get_gitdir()
         git_push_args = ["push", "--force", origin] + refs_to_update
         ui.status_err(_("pushing %d to %s\n") % (len(refs_to_update), origin))
-        run_git_command(git_push_args, gitdir)
+        procs = [run_git_command_popen(["push", "--force", origin, ref], gitdir) for ref in refs_to_update]
+        for p in procs:
+            p.wait()
+        # for ref in refs_to_update:
+        #     run_git_command_popen(["push", "--force", origin, ref], gitdir)
+        # run_git_command(git_push_args, gitdir)
     else:
         ui.status_err(_("no pull requests to update\n"))
         return 0
@@ -243,6 +248,8 @@ async def update_commits_in_stack(
     await asyncio.gather(*rewrite_and_archive_requests)
     return 0
 
+async def push_to_remote(origin: str, ref: str, gitdir: str) -> None:
+    run_git_command(["push", "--force", origin, ref], gitdir)
 
 async def rewrite_pull_request_body(
     partitions: List[List[CommitData]],

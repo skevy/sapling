@@ -25,3 +25,20 @@ def run_git_command(args: List[str], gitdir: str) -> bytes:
                 f"stdout: {proc.stdout.decode()}\nstderr: {proc.stderr.decode()}\n",
             )
         )
+
+def run_git_command_popen(args: List[str], gitdir: str) -> bytes:
+    """Returns stdout as a bytes if the command is successful."""
+    full_args = ["git", "--git-dir", gitdir] + args
+    proc = subprocess.Popen(full_args)
+    return proc
+    # if proc.returncode == 0:
+    #     return proc.stdout
+    # else:
+    #     raise error.Abort(
+    #         _("`%s` failed with exit code %d: %s")
+    #         % (
+    #             " ".join(full_args),
+    #             proc.returncode,
+    #             f"stdout: {proc.stdout.decode()}\nstderr: {proc.stderr.decode()}\n",
+    #         )
+    #     )
